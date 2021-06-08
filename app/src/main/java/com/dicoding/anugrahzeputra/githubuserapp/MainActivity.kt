@@ -4,20 +4,21 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import com.dicoding.anugrahzeputra.githubuserapp.databinding.ActivityMainBinding
 import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var rvgithubapp: RecyclerView
+    private lateinit var binding: ActivityMainBinding
     private var list: ArrayList<GithubUser> = arrayListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        rvgithubapp = findViewById(R.id.rv_githubapp)
-        rvgithubapp.setHasFixedSize(true)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.rvGithubapp.setHasFixedSize(true)
 
         list.addAll(githubuserData())
         showRecyclerList()
@@ -51,9 +52,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showRecyclerList() {
-        rvgithubapp.layoutManager = LinearLayoutManager(this)
+        binding.rvGithubapp.layoutManager = LinearLayoutManager(this)
         val cardViewAdapter = RvAdapter(list)
-        rvgithubapp.adapter = cardViewAdapter
+        binding.rvGithubapp.adapter = cardViewAdapter
         cardViewAdapter.setItemInClick(object : RvAdapter.ItemInClickCallback {
             override fun itemClicked(data: GithubUser) = intentMovetoDetail(data)
             override fun buttonClicked(data: GithubUser) = intentImplicitSEND(data)
