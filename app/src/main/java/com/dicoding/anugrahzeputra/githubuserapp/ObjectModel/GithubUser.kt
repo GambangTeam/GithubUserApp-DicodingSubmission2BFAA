@@ -1,4 +1,4 @@
-package com.dicoding.anugrahzeputra.githubuserapp
+package com.dicoding.anugrahzeputra.githubuserapp.ObjectModel
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
@@ -12,5 +12,6 @@ data class GithubUser(
     var location: String? = "",
     var company: String = "",
     var repo: String? = "",
+    var avatar: String? = "",
     var photo: Int = 0
 ) : Parcelable

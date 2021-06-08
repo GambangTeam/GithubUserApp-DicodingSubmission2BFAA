@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.dicoding.anugrahzeputra.githubuserapp">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/githubuserlogo"
@@ -9,9 +10,9 @@
         android:roundIcon="@mipmap/githubuserlogo"
         android:supportsRtl="true"
         android:theme="@style/Theme.GithubUserApp">
-        <activity android:name=".GithubUserDesc" />
+        <activity android:name=".Layout.GithubUserDesc" />
         <activity
-            android:name=".SplashScreen"
+            android:name=".Layout.SplashScreen"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

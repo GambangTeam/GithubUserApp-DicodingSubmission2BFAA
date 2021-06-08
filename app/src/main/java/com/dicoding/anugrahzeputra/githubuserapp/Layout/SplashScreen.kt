@@ -1,9 +1,11 @@
-package com.dicoding.anugrahzeputra.githubuserapp
+package com.dicoding.anugrahzeputra.githubuserapp.Layout
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import com.dicoding.anugrahzeputra.githubuserapp.MainActivity
+import com.dicoding.anugrahzeputra.githubuserapp.R
 
 @Suppress("DEPRECATION")
 class SplashScreen : AppCompatActivity() {

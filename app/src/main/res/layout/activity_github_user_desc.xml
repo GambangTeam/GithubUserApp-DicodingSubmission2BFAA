@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:background="#787676"
-    tools:context=".GithubUserDesc">
+    tools:context=".Layout.GithubUserDesc">
 
     <TableLayout
         android:layout_width="match_parent"

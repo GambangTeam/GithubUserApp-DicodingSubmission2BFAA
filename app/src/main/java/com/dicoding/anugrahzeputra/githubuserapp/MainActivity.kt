@@ -3,14 +3,30 @@ package com.dicoding.anugrahzeputra.githubuserapp
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.dicoding.anugrahzeputra.githubuserapp.Adapters.RvAdapter
+import com.dicoding.anugrahzeputra.githubuserapp.Layout.GithubUserDesc
+import com.dicoding.anugrahzeputra.githubuserapp.ObjectModel.GithubUser
 import com.dicoding.anugrahzeputra.githubuserapp.databinding.ActivityMainBinding
+import com.loopj.android.http.AsyncHttpClient
+import com.loopj.android.http.AsyncHttpResponseHandler
+import cz.msebera.android.httpclient.Header
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var errMsg : String
     private var list: ArrayList<GithubUser> = arrayListOf()
+    companion object {
+        private val TAG = MainActivity::class.java.simpleName
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,11 +36,67 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.rvGithubapp.setHasFixedSize(true)
 
-        list.addAll(githubuserData())
-        showRecyclerList()
+        getGithubData()
     }
 
+    private fun getGithubData(){
+        val client = AsyncHttpClient()
+        val url = "https://api.github.com/search/users?q=anugrah"
+        client.addHeader("Authentication","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")
+        client.addHeader("User-agent","request")
+        client.get(url, object : AsyncHttpResponseHandler() {
+            override fun onSuccess(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                responseBody: ByteArray?
+            ) {
+                try {
+                    val listUser = ArrayList<GithubUser>()
+                    val result = responseBody?.let { String(it) }
+                    Log.d(TAG, result!!)
+
+                    val responseObject = JSONObject(result)
+                    val items = responseObject.getJSONArray("items")
+
+                    for (i in 0 until items.length()) {
+                        val item = items.getJSONObject(i)
+                        val username = item.getString("login")
+                        val avatar = item.getString("avatar_url")
+                        val user = GithubUser()
+                        user.name = username
+                        user.avatar = avatar
+                        listUser.add(user)
+                        Log.d(TAG, username)
+                    }
+                    list.addAll(listUser)
+                    showRecyclerList()
+                } catch (e: Exception) {
+                    Log.d(TAG, e.message.toString())
+                }
+            }
+
+            override fun onFailure(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                responseBody: ByteArray?,
+                error: Throwable?
+            ) {
+                errMsg = when (statusCode) {
+                    401 -> "$statusCode : Bad Request"
+                    403 -> "$statusCode : Forbidden"
+                    404 -> "$statusCode : NotFound"
+                    else -> "$statusCode : Bad Request"
+                }
+                Log.d(TAG, errMsg)
+                GlobalScope.launch(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, errMsg, Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
+/*
     private fun githubuserData(): ArrayList<GithubUser> {
+
         val name = resources.getStringArray(R.array.name)
         val userName = resources.getStringArray(R.array.username)
         val location = resources.getStringArray(R.array.location)
@@ -49,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         }
         avatar.recycle()
         return listgithubuser
-    }
+    }*/
 
     private fun showRecyclerList() {
         binding.rvGithubapp.layoutManager = LinearLayoutManager(this)
@@ -63,7 +135,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun intentImplicitSEND(data: GithubUser) {
         val intentIS = Intent(Intent.ACTION_SEND)
-        intentIS.setType("text/plain")
+        intentIS.type = "text/plain"
         val content = "Ini nih user github yang aku mau share" +
                 "\nNamanya " + data.name +
                 "\nuseridnya " + data.id +

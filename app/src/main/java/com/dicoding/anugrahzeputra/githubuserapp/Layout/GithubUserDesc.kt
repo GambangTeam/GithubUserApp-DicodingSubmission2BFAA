@@ -1,4 +1,4 @@
-package com.dicoding.anugrahzeputra.githubuserapp
+package com.dicoding.anugrahzeputra.githubuserapp.Layout
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -6,6 +6,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.dicoding.anugrahzeputra.githubuserapp.ObjectModel.GithubUser
+import com.dicoding.anugrahzeputra.githubuserapp.R
 
 class GithubUserDesc : AppCompatActivity() {
 

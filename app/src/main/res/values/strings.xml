@@ -13,6 +13,7 @@
     <string name="repo">repository</string>
     <string name="location">location</string>
     <string name="company">company</string>
+    <string name="search">search</string>
 
     <!-- Other string resources-->
 

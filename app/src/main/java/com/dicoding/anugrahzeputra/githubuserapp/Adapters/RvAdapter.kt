@@ -1,16 +1,12 @@
-package com.dicoding.anugrahzeputra.githubuserapp
+package com.dicoding.anugrahzeputra.githubuserapp.Adapters
 
-import android.opengl.GLES30
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.dicoding.anugrahzeputra.githubuserapp.ObjectModel.GithubUser
 import com.dicoding.anugrahzeputra.githubuserapp.databinding.ItemviewBinding
 
 class RvAdapter(private val listGithubUser: ArrayList<GithubUser>) : RecyclerView.Adapter<RvAdapter.CardViewViewHolder>(
