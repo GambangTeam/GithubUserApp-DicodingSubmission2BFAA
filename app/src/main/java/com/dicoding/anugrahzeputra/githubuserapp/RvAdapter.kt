@@ -40,7 +40,7 @@ class RvAdapter(private val listGithubUser: ArrayList<GithubUser>) : RecyclerVie
                 val follower = "Follower = " + users.follower
                 tvDesc.text = follower
                 val following = "Following = " + users.following
-                tvDesc.text = following
+                tvDescFoll.text = following
                 itemView.setOnClickListener {
                     itemInClick.itemClicked(users)
                     Toast.makeText(
