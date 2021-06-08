@@ -14,6 +14,7 @@
     <string name="location">location</string>
     <string name="company">company</string>
     <string name="search">search</string>
+    <string name="search_hint">cari user</string>
 
     <!-- Other string resources-->
 
