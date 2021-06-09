@@ -10,4 +10,5 @@
     <color name="colorPrimary">#434343</color>
     <color name="colorPrimaryVariant">#575757</color>
     <color name="colorSecondary">#767676</color>
+    <color name="background_app">#787676</color>
 </resources>

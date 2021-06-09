@@ -1,16 +1,16 @@
 package com.dicoding.anugrahzeputra.githubuserapp
 
-import android.app.SearchManager
-import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.SearchView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.appcompat.widget.SearchView.OnQueryTextListener
 import com.dicoding.anugrahzeputra.githubuserapp.Adapters.RvAdapter
 import com.dicoding.anugrahzeputra.githubuserapp.Layout.GithubUserDesc
 import com.dicoding.anugrahzeputra.githubuserapp.ObjectModel.GithubUser
@@ -27,8 +27,9 @@ import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var errMsg : String
+    private lateinit var errMsg: String
     private var list: ArrayList<GithubUser> = arrayListOf()
+
     companion object {
         private val TAG = MainActivity::class.java.simpleName
     }
@@ -42,13 +43,34 @@ class MainActivity : AppCompatActivity() {
         binding.rvGithubapp.setHasFixedSize(true)
 
         getGithubData()
+        searchGithubUser()
     }
 
-    private fun getGithubData(){
+    private fun searchGithubUser() {
+        binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
+            OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                if (query.isEmpty()) {
+                    return true
+                } else {
+                    list.clear()
+                    getUserSearch(query)
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                return false
+            }
+        })
+    }
+
+    private fun getUserSearch(text: String) {
+        binding.progressBar.visibility = View.VISIBLE
         val client = AsyncHttpClient()
-        val url = "https://api.github.com/search/users?q=anugrah"
-        client.addHeader("Authentication","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")
-        client.addHeader("User-agent","request")
+        val url = "https://api.github.com/search/users?q=$text"
+        client.addHeader("Authentication", "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")
+        client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
             override fun onSuccess(
                 statusCode: Int,
@@ -66,10 +88,67 @@ class MainActivity : AppCompatActivity() {
                     for (i in 0 until items.length()) {
                         val item = items.getJSONObject(i)
                         val username = item.getString("login")
-                        val avatar = item.getString("avatar_url")
+                        val photo = item.getString("avatar_url")
                         val user = GithubUser()
                         user.name = username
-                        user.avatar = avatar
+                        user.photo = photo
+                        listUser.add(user)
+                        Log.d(TAG, username)
+                    }
+                    list.addAll(listUser)
+                    showRecyclerList()
+                    binding.progressBar.visibility = View.INVISIBLE
+                } catch (e: Exception) {
+                    Log.d(TAG, e.message.toString())
+                }
+            }
+
+            override fun onFailure(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                responseBody: ByteArray?,
+                error: Throwable?
+            ) {
+                errMsg = when (statusCode) {
+                    401 -> "$statusCode : Bad Request"
+                    403 -> "$statusCode : Forbidden"
+                    404 -> "$statusCode : NotFound"
+                    else -> "$statusCode : Bad Request"
+                }
+                Log.d(TAG, errMsg)
+                GlobalScope.launch(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, errMsg, Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
+
+    private fun getGithubData() {
+        val client = AsyncHttpClient()
+        val url = "https://api.github.com/users"
+        client.addHeader("Authentication", "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")
+        client.addHeader("User-agent", "request")
+        client.get(url, object : AsyncHttpResponseHandler() {
+            override fun onSuccess(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                responseBody: ByteArray?
+            ) {
+                try {
+                    val listUser = ArrayList<GithubUser>()
+                    val result = responseBody?.let { String(it) }
+                    Log.d(TAG, result!!)
+
+                    val responseObject = JSONObject(result)
+                    val items = responseObject.getJSONArray("items")
+
+                    for (i in 0 until items.length()) {
+                        val item = items.getJSONObject(i)
+                        val username = item.getString("login")
+                        val photo = item.getString("avatar_url")
+                        val user = GithubUser()
+                        user.name = username
+                        user.photo = photo
                         listUser.add(user)
                         Log.d(TAG, username)
                     }
@@ -99,34 +178,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-/*
-    private fun githubuserData(): ArrayList<GithubUser> {
-
-        val name = resources.getStringArray(R.array.name)
-        val userName = resources.getStringArray(R.array.username)
-        val location = resources.getStringArray(R.array.location)
-        val repository = resources.getStringArray(R.array.repository)
-        val company = resources.getStringArray(R.array.company)
-        val followers = resources.getStringArray(R.array.followers)
-        val following = resources.getStringArray(R.array.following)
-        val avatar = resources.obtainTypedArray(R.array.avatar)
-
-        val listgithubuser = ArrayList<GithubUser>()
-        for (position in name.indices) {
-            val githubuser = GithubUser()
-            githubuser.name = name[position]
-            githubuser.id = userName[position]
-            githubuser.location = location[position]
-            githubuser.repo = repository[position]
-            githubuser.company = company[position]
-            githubuser.follower = followers[position]
-            githubuser.following = following[position]
-            githubuser.photo = avatar.getResourceId(position, 0)
-            listgithubuser.add(githubuser)
-        }
-        avatar.recycle()
-        return listgithubuser
-    }*/
 
     private fun showRecyclerList() {
         binding.rvGithubapp.layoutManager = LinearLayoutManager(this)
@@ -159,32 +210,9 @@ class MainActivity : AppCompatActivity() {
         startActivity(intentMD)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.menuitem, menu)
-
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        val searchView = menu.findItem(R.id.search).actionView as SearchView
-
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
-        searchView.queryHint = resources.getString(R.string.search_hint)
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            /*
-            Gunakan method ini ketika search selesai atau OK
-             */
-            override fun onQueryTextSubmit(query: String): Boolean {
-                Toast.makeText(this@MainActivity, query, Toast.LENGTH_SHORT).show()
-                return true
-            }
-
-            /*
-            Gunakan method ini untuk merespon tiap perubahan huruf pada searchView
-             */
-            override fun onQueryTextChange(newText: String): Boolean {
-                return false
-            }
-        })
-        return true
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menuitem, menu)
+        return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

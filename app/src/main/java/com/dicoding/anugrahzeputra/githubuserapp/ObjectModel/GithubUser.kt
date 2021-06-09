@@ -12,6 +12,5 @@ data class GithubUser(
     var location: String? = "",
     var company: String = "",
     var repo: String? = "",
-    var avatar: String? = "",
-    var photo: Int = 0
+    var photo: String? = ""
 ) : Parcelable
