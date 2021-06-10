@@ -1,4 +1,4 @@
-package com.dicoding.anugrahzeputra.githubuserapp.Layout
+package com.dicoding.anugrahzeputra.githubuserapp.layouts
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity

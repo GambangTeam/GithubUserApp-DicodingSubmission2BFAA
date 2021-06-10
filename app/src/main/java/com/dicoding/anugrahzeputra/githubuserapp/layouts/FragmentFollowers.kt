@@ -1,74 +1,56 @@
-package com.dicoding.anugrahzeputra.githubuserapp
+package com.dicoding.anugrahzeputra.githubuserapp.layouts
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.widget.SearchView
+import android.view.*
+import androidx.fragment.app.Fragment
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.appcompat.widget.SearchView.OnQueryTextListener
+import androidx.recyclerview.widget.RecyclerView
+import com.dicoding.anugrahzeputra.githubuserapp.R
 import com.dicoding.anugrahzeputra.githubuserapp.adapters.RvAdapter
-import com.dicoding.anugrahzeputra.githubuserapp.layouts.GithubUserDesc
 import com.dicoding.anugrahzeputra.githubuserapp.objectmodels.GithubUser
-import com.dicoding.anugrahzeputra.githubuserapp.databinding.ActivityMainBinding
 import com.loopj.android.http.AsyncHttpClient
 import com.loopj.android.http.AsyncHttpResponseHandler
 import cz.msebera.android.httpclient.Header
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
-import java.util.*
-import kotlin.collections.ArrayList
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
+class FragmentFollowers : Fragment() {
+    //private lateinit var binding: FragmentFollowersBinding
+    private lateinit var rvFragment: RecyclerView
     private lateinit var errMsg: String
+    
     private var list: ArrayList<GithubUser> = arrayListOf()
-
+    
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_followers, container, false)
+    }
+    
     companion object {
-        private val TAG = MainActivity::class.java.simpleName
+        private val TAG = FragmentFollowers::class.java.simpleName
+        const val EXTRA_GITHUBUSER = "extra_githubuser"
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.rvGithubapp.setHasFixedSize(true)
-
-        getGithubData()
-        searchGithubUser()
+        rvFragment = view.findViewById(R.id.rv_Followers)
+        val dataImport = requireActivity().intent.getParcelableExtra<GithubUser>(EXTRA_GITHUBUSER) as GithubUser
+        getUserFollowers(dataImport.name.toString())
     }
 
-    private fun searchGithubUser() {
-        binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener,
-            OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                if (query.isEmpty()) {
-                    return true
-                } else {
-                    list.clear()
-                    getUserSearch(query)
-                }
-                return true
-            }
-
-            override fun onQueryTextChange(newText: String): Boolean {
-                return false
-            }
-        })
-    }
-
-    private fun getUserSearch(text: String) {
-        binding.progressBar.visibility = View.VISIBLE
+    private fun getUserFollowers(name: String) {
         val client = AsyncHttpClient()
-        val url = "https://api.github.com/search/users?q=$text"
+        val url = "https://api.github.com/users/$name/followers"
         client.addHeader("Authentication", "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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
@@ -78,26 +60,15 @@ class MainActivity : AppCompatActivity() {
                 responseBody: ByteArray?
             ) {
                 try {
-                    val listUser = ArrayList<GithubUser>()
                     val result = responseBody?.let { String(it) }
                     Log.d(TAG, result!!)
 
-                    val responseObject = JSONObject(result)
-                    val items = responseObject.getJSONArray("items")
-
-                    for (i in 0 until items.length()) {
-                        val item = items.getJSONObject(i)
-                        val username = item.getString("login")
-                        val photo = item.getString("avatar_url")
-                        val user = GithubUser()
-                        user.name = username
-                        user.photo = photo
-                        listUser.add(user)
-                        Log.d(TAG, username)
+                    val responseObject = JSONArray(result)
+                    for (i in 0 until responseObject.length()){
+                        val jsonObject = responseObject.getJSONObject(i)
+                        val userName: String = jsonObject.getString("login")
+                        createUserData(userName)
                     }
-                    list.addAll(listUser)
-                    showRecyclerList()
-                    binding.progressBar.visibility = View.INVISIBLE
                 } catch (e: Exception) {
                     Log.d(TAG, e.message.toString())
                 }
@@ -117,15 +88,15 @@ class MainActivity : AppCompatActivity() {
                 }
                 Log.d(TAG, errMsg)
                 GlobalScope.launch(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, errMsg, Toast.LENGTH_LONG).show()
+                    Toast.makeText(activity, errMsg, Toast.LENGTH_LONG).show()
                 }
             }
         })
     }
 
-    private fun getGithubData() {
+    private fun createUserData(name: String) {
         val client = AsyncHttpClient()
-        val url = "https://api.github.com/users"
+        val url = "https://api.github.com/users/$name"
         client.addHeader("Authentication", "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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
@@ -140,18 +111,14 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, result!!)
 
                     val responseObject = JSONObject(result)
-                    val items = responseObject.getJSONArray("items")
+                    val username = responseObject.getString("login")
+                    val photo = responseObject.getString("avatar_url")
+                    val user = GithubUser()
+                    user.name = username
+                    user.photo = photo
+                    listUser.add(user)
+                    Log.d(TAG, username)
 
-                    for (i in 0 until items.length()) {
-                        val item = items.getJSONObject(i)
-                        val username = item.getString("login")
-                        val photo = item.getString("avatar_url")
-                        val user = GithubUser()
-                        user.name = username
-                        user.photo = photo
-                        listUser.add(user)
-                        Log.d(TAG, username)
-                    }
                     list.addAll(listUser)
                     showRecyclerList()
                 } catch (e: Exception) {
@@ -173,16 +140,17 @@ class MainActivity : AppCompatActivity() {
                 }
                 Log.d(TAG, errMsg)
                 GlobalScope.launch(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, errMsg, Toast.LENGTH_LONG).show()
+                    Toast.makeText(activity, errMsg, Toast.LENGTH_LONG).show()
                 }
             }
         })
     }
+
 
     private fun showRecyclerList() {
-        binding.rvGithubapp.layoutManager = LinearLayoutManager(this)
+        rvFragment.layoutManager = LinearLayoutManager(activity)
         val cardViewAdapter = RvAdapter(list)
-        binding.rvGithubapp.adapter = cardViewAdapter
+        rvFragment.adapter = cardViewAdapter
         cardViewAdapter.setItemInClick(object : RvAdapter.ItemInClickCallback {
             override fun itemClicked(data: GithubUser) = intentMovetoDetail(data)
             override fun buttonClicked(data: GithubUser) = intentImplicitSEND(data)
@@ -205,17 +173,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun intentMovetoDetail(data: GithubUser) {
-        val intentMD = Intent(this@MainActivity, GithubUserDesc::class.java)
+        val intentMD = Intent(activity, GithubUserDesc::class.java)
         intentMD.putExtra(GithubUserDesc.EXTRA_GITHUBUSER, data)
         startActivity(intentMD)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menuitem, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return true
     }
 }

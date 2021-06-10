@@ -1,10 +1,10 @@
-package com.dicoding.anugrahzeputra.githubuserapp.ObjectModel
+package com.dicoding.anugrahzeputra.githubuserapp.objectmodels
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class GithubUser(
+data class GithubFollowing(
     var name: String? = "",
     var id: String? = "",
     var follower: String? = "",

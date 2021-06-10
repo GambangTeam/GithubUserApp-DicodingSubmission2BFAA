@@ -39,5 +39,4 @@
         tools:layout_editor_absoluteX="0dp"
         tools:listitem="@layout/itemview" />
 
-
 </androidx.constraintlayout.widget.ConstraintLayout>
