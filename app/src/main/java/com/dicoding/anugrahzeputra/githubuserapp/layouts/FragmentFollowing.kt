@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,9 +24,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 class FragmentFollowing : Fragment() {
-    //private lateinit var binding: FragmentFollowersBinding
+    //private lateinit var binding: FragmentFollowingBinding
     private lateinit var rvFragment: RecyclerView
     private lateinit var errMsg: String
+    private lateinit var progressBar: ProgressBar
 
     private var list: ArrayList<GithubUser> = arrayListOf()
 
@@ -34,26 +36,29 @@ class FragmentFollowing : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_followers, container, false)
+        return inflater.inflate(R.layout.fragment_following, container, false)
     }
 
     companion object {
-        private val TAG = FragmentFollowers::class.java.simpleName
+        private val TAG = FragmentFollowing::class.java.simpleName
         const val EXTRA_GITHUBUSER = "extra_githubuser"
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        rvFragment = view.findViewById(R.id.rv_Followers)
+        progressBar = view.findViewById(R.id.followingProgressBar)
+        rvFragment = view.findViewById(R.id.rvFollowing)
         val dataImport = requireActivity().intent.getParcelableExtra<GithubUser>(EXTRA_GITHUBUSER) as GithubUser
-        getUserFollowing(dataImport.name.toString())
+        getUserFollowing(dataImport.id.toString())
     }
 
     private fun getUserFollowing(name: String) {
+        progressBar.visibility = View.VISIBLE
         val client = AsyncHttpClient()
         val url = "https://api.github.com/users/$name/following"
-        client.addHeader("Authentication", "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")
+        //client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token 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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
             override fun onSuccess(
@@ -62,6 +67,7 @@ class FragmentFollowing : Fragment() {
                 responseBody: ByteArray?
             ) {
                 try {
+                    progressBar.visibility = View.INVISIBLE
                     val result = responseBody?.let { String(it) }
                     Log.d(TAG, result!!)
 
@@ -71,6 +77,9 @@ class FragmentFollowing : Fragment() {
                         val userName: String = jsonObject.getString("login")
                         createUserData(userName)
                     }
+                    Log.d(TAG, list.toString())
+                    showRecyclerList()
+                    progressBar.visibility = View.INVISIBLE
                 } catch (e: Exception) {
                     Log.d(TAG, e.message.toString())
                 }
@@ -99,7 +108,8 @@ class FragmentFollowing : Fragment() {
     private fun createUserData(name: String) {
         val client = AsyncHttpClient()
         val url = "https://api.github.com/users/$name"
-        client.addHeader("Authentication", "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")
+        //client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token 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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
             override fun onSuccess(
@@ -113,11 +123,24 @@ class FragmentFollowing : Fragment() {
                     Log.d(TAG, result!!)
 
                     val responseObject = JSONObject(result)
-                    val username = responseObject.getString("login")
+                    val username = responseObject.getString("name")
+                    val userid = responseObject.getString("login")
                     val photo = responseObject.getString("avatar_url")
+                    val followers = responseObject.getInt("followers")
+                    val following = responseObject.getInt("following")
+                    val repo = responseObject.getInt("public_repos")
+                    val location = responseObject.getString("location")
+                    val company = responseObject.getString("company")
                     val user = GithubUser()
                     user.name = username
+                    user.id = userid
                     user.photo = photo
+                    user.follower = followers.toString()
+                    user.following = following.toString()
+                    user.repo = repo.toString()
+                    user.location = location
+                    user.company = company
+
                     listUser.add(user)
                     Log.d(TAG, username)
 

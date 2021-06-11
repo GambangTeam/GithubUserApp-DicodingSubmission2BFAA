@@ -1,7 +1,11 @@
 package com.dicoding.anugrahzeputra.githubuserapp.layouts
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.viewpager2.widget.ViewPager2
@@ -34,6 +38,8 @@ class GithubUserDesc : AppCompatActivity() {
         setContentView(binding.root)
 
         val githubuser = intent.getParcelableExtra<GithubUser>(EXTRA_GITHUBUSER) as GithubUser
+        supportActionBar?.title = "Github User ${githubuser.name}"
+
         Glide.with(this)
             .load(githubuser.photo)
             .apply(RequestOptions().override(350, 550))
@@ -66,5 +72,18 @@ class GithubUserDesc : AppCompatActivity() {
         }.attach()
 
         supportActionBar?.elevation = 0f
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menuitem, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId == R.id.language) {
+            val Lintent = Intent(Settings.ACTION_LOCALE_SETTINGS)
+            startActivity(Lintent)
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

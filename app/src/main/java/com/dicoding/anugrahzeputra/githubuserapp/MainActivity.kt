@@ -3,6 +3,7 @@ package com.dicoding.anugrahzeputra.githubuserapp
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -21,6 +22,7 @@ import cz.msebera.android.httpclient.Header
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
@@ -42,7 +44,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.rvGithubapp.setHasFixedSize(true)
 
-        getGithubData()
+        supportActionBar?.title = "Github Users Search"
+
+        //recyclerViewConfig()
+        getGithubUsers()
         searchGithubUser()
     }
 
@@ -51,16 +56,28 @@ class MainActivity : AppCompatActivity() {
             OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 if (query.isEmpty()) {
-                    return true
+                    getGithubUsers()
+                    //return true
                 } else {
                     list.clear()
                     getUserSearch(query)
+                    binding.progressBar.visibility = View.VISIBLE
+                    //return true
                 }
                 return true
             }
 
             override fun onQueryTextChange(newText: String): Boolean {
-                return false
+                if (newText.isEmpty()) {
+                    getGithubUsers()
+                    binding.progressBar.visibility = View.VISIBLE
+                    //return true
+                } else {
+                    getUserSearch(newText)
+                    //return false
+                    //return true
+                }
+                return true
             }
         })
     }
@@ -69,7 +86,8 @@ class MainActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         val client = AsyncHttpClient()
         val url = "https://api.github.com/search/users?q=$text"
-        client.addHeader("Authentication", "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")
+        //client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token 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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
             override fun onSuccess(
@@ -78,7 +96,7 @@ class MainActivity : AppCompatActivity() {
                 responseBody: ByteArray?
             ) {
                 try {
-                    val listUser = ArrayList<GithubUser>()
+                    list.clear()
                     val result = responseBody?.let { String(it) }
                     Log.d(TAG, result!!)
 
@@ -87,15 +105,10 @@ class MainActivity : AppCompatActivity() {
 
                     for (i in 0 until items.length()) {
                         val item = items.getJSONObject(i)
-                        val username = item.getString("login")
-                        val photo = item.getString("avatar_url")
-                        val user = GithubUser()
-                        user.name = username
-                        user.photo = photo
-                        listUser.add(user)
-                        Log.d(TAG, username)
+                        val userlogin = item.getString("login")
+                        Log.d(TAG, userlogin)
+                        getGithubData(userlogin)
                     }
-                    list.addAll(listUser)
                     showRecyclerList()
                     binding.progressBar.visibility = View.INVISIBLE
                 } catch (e: Exception) {
@@ -109,6 +122,7 @@ class MainActivity : AppCompatActivity() {
                 responseBody: ByteArray?,
                 error: Throwable?
             ) {
+                binding.progressBar.visibility = View.INVISIBLE
                 errMsg = when (statusCode) {
                     401 -> "$statusCode : Bad Request"
                     403 -> "$statusCode : Forbidden"
@@ -123,10 +137,66 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun getGithubData() {
+    private fun getGithubUsers() {
+        binding.progressBar.visibility = View.VISIBLE
         val client = AsyncHttpClient()
         val url = "https://api.github.com/users"
-        client.addHeader("Authentication", "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")
+        //client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token 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")
+        client.addHeader("User-agent", "request")
+        client.get(url, object : AsyncHttpResponseHandler() {
+            override fun onSuccess(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                responseBody: ByteArray?
+            ) {
+                try {
+                    list.clear()
+                    val result = responseBody?.let { String(it) }
+                    Log.d(TAG, result!!)
+
+                    val responseArray = JSONArray(result)
+                    for (i in 0 until responseArray.length()) {
+                        val item = responseArray.getJSONObject(i)
+                        val userlogin = item.getString("login")
+                        Log.d(TAG, userlogin)
+                        getGithubData(userlogin)
+                    }
+                    Log.d(TAG, list.toString())
+                    showRecyclerList()
+                    binding.progressBar.visibility = View.INVISIBLE
+                } catch (e: Exception) {
+                    Log.d(TAG, e.message.toString())
+                }
+            }
+
+            override fun onFailure(
+                statusCode: Int,
+                headers: Array<out Header>?,
+                responseBody: ByteArray?,
+                error: Throwable?
+            ) {
+                binding.progressBar.visibility = View.INVISIBLE
+                errMsg = when (statusCode) {
+                    401 -> "$statusCode : Bad Request"
+                    403 -> "$statusCode : Forbidden"
+                    404 -> "$statusCode : NotFound"
+                    else -> "$statusCode : Bad Request"
+                }
+                Log.d(TAG, errMsg)
+                GlobalScope.launch(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, errMsg, Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
+
+    private fun getGithubData(userlogin: String) {
+        binding.progressBar.visibility = View.VISIBLE
+        val client = AsyncHttpClient()
+        val url = "https://api.github.com/users/$userlogin"
+        //client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token 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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
             override fun onSuccess(
@@ -140,20 +210,29 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, result!!)
 
                     val responseObject = JSONObject(result)
-                    val items = responseObject.getJSONArray("items")
+                    val username = responseObject.getString("name")
+                    val userid = responseObject.getString("login")
+                    val photo = responseObject.getString("avatar_url")
+                    val followers = responseObject.getInt("followers")
+                    val following = responseObject.getInt("following")
+                    val repo = responseObject.getInt("public_repos")
+                    val location = responseObject.getString("location")
+                    val company = responseObject.getString("company")
+                    val user = GithubUser()
+                    user.name = username
+                    user.id = userid
+                    user.photo = photo
+                    user.follower = followers.toString()
+                    user.following = following.toString()
+                    user.repo = repo.toString()
+                    user.location = location
+                    user.company = company
 
-                    for (i in 0 until items.length()) {
-                        val item = items.getJSONObject(i)
-                        val username = item.getString("login")
-                        val photo = item.getString("avatar_url")
-                        val user = GithubUser()
-                        user.name = username
-                        user.photo = photo
-                        listUser.add(user)
-                        Log.d(TAG, username)
-                    }
+                    listUser.add(user)
+                    Log.d(TAG, username)
+
                     list.addAll(listUser)
-                    showRecyclerList()
+                    //showRecyclerList()
                 } catch (e: Exception) {
                     Log.d(TAG, e.message.toString())
                 }
@@ -178,7 +257,15 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
-
+/*
+    private fun recyclerViewConfig() {
+        binding.rvGithubapp.layoutManager = LinearLayoutManager(binding.rvGithubapp.context)
+        binding.rvGithubapp.setHasFixedSize(true)
+        binding.rvGithubapp.addItemDecoration(DividerItemDecoration(
+            binding.rvGithubapp.context, DividerItemDecoration.VERTICAL
+        ))
+    }
+*/
     private fun showRecyclerList() {
         binding.rvGithubapp.layoutManager = LinearLayoutManager(this)
         val cardViewAdapter = RvAdapter(list)
@@ -216,6 +303,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return true
+        if(item.itemId == R.id.language) {
+            val lIntent = Intent(Settings.ACTION_LOCALE_SETTINGS)
+            startActivity(lIntent)
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
