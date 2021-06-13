@@ -56,8 +56,8 @@ class FragmentFollowers : Fragment() {
         progressBar.visibility = View.VISIBLE
         val client = AsyncHttpClient()
         val url = "https://api.github.com/users/$name/followers"
-        //client.addHeader("Authorization", "token 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")
-        client.addHeader("Authorization", "token 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")
+        //client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token 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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
             override fun onSuccess(
@@ -108,8 +108,8 @@ class FragmentFollowers : Fragment() {
     private fun createUserData(name: String) {
         val client = AsyncHttpClient()
         val url = "https://api.github.com/users/$name"
-        //client.addHeader("Authorization", "token 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")
-        client.addHeader("Authorization", "token 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")
+        //client.addHeader("Authorization", "token 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")
+        client.addHeader("Authorization", "token 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")
         client.addHeader("User-agent", "request")
         client.get(url, object : AsyncHttpResponseHandler() {
             override fun onSuccess(
